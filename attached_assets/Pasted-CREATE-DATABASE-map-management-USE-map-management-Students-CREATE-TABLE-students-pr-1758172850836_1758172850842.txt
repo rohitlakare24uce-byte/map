@@ -1,0 +1,194 @@
+CREATE DATABASE map_management;
+USE map_management;
+
+-- Students
+CREATE TABLE students (
+    prn VARCHAR(20) PRIMARY KEY,
+    first_name VARCHAR(50),
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50),
+    dept VARCHAR(100),
+    year INT,
+    programme VARCHAR(50),
+course_duration INT,
+ admission_year VARCHAR(9),
+    password VARCHAR(255)
+);
+
+-- Coordinators
+CREATE TABLE coordinators (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    password VARCHAR(255)
+);
+
+-- HoDs
+CREATE TABLE hods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    password VARCHAR(255)
+);
+
+-- Admins
+CREATE TABLE admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    password VARCHAR(255)
+);
+
+-- Activities submitted by students
+CREATE TABLE activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    prn VARCHAR(20),
+    category CHAR(1), -- A-E
+    activity_type VARCHAR(100),
+    level VARCHAR(20),
+    certificate VARCHAR(255),
+    date DATE,
+    remarks TEXT,
+    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    points INT DEFAULT 0,
+    FOREIGN KEY (prn) REFERENCES students(prn)
+);
+
+
+CREATE TABLE programme_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admission_year VARCHAR(9),   -- e.g., '2025-2026'
+    programme VARCHAR(50),
+    duration INT,
+    technical INT,
+    sports_cultural INT,
+    community_outreach INT,
+    innovation INT,
+    leadership INT,
+    total_points INT
+);
+🔹 Step 3: Insert Data (Table 1 – 2025–26 Batch)
+sql
+Copy code
+-- Students Admitted in Academic Year 2025–2026
+INSERT INTO programme_rules 
+(admission_year, programme, duration, technical, sports_cultural, community_outreach, innovation, leadership, total_points)
+VALUES
+('2025-2026', 'B.Tech', 4, 45, 10, 10, 25, 10, 100),
+('2025-2026', 'B.Tech (DSY)', 3, 30, 10, 10, 15, 10, 75),
+('2025-2026', 'Integrated B.Tech', 6, 50, 10, 15, 25, 15, 120),
+('2025-2026', 'B.Pharm', 4, 45, 10, 15, 20, 10, 100),
+('2025-2026', 'BCA', 3, 20, 10, 10, 10, 10, 60),
+('2025-2026', 'MCA', 2, 20, 5, 10, 5, 10, 50),
+('2025-2026', 'B.Sc', 3, 20, 10, 10, 10, 10, 60),
+('2025-2026', 'M.Sc', 2, 20, 5, 5, 10, 10, 50),
+('2025-2026', 'B.Com', 3, 20, 10, 10, 10, 10, 60),
+('2025-2026', 'M.Com', 2, 20, 5, 5, 10, 10, 50),
+('2025-2026', 'BBA', 3, 20, 10, 10, 10, 10, 60),
+('2025-2026', 'MBA', 2, 20, 10, 10, 10, 10, 60);
+🔹 Step 4: Insert Data (Table 2 – 2024–25 Batch)
+-- Students Admitted in Academic Year 2024–2025
+INSERT INTO programme_rules 
+(admission_year, programme, duration, technical, sports_cultural, community_outreach, innovation, leadership, total_points)
+VALUES
+('2024-2025', 'B.Tech', 4, 30, 5, 10, 20, 10, 75),
+('2024-2025', 'B.Tech (DSY)', 3, 20, 5, 5, 15, 5, 50),
+('2024-2025', 'B.Com', 3, 15, 5, 5, 10, 10, 45),
+('2024-2025', 'BBA', 3, 20, 5, 5, 5, 10, 45),
+('2024-2025', 'MBA', 2, 10, 5, 5, 5, 5, 30);
+
+
+🔹 Step 1: Categories Table
+Keep master categories (A–E).
+CREATE TABLE categories (
+    id CHAR(1) PRIMARY KEY,  -- A, B, C, D, E
+    name VARCHAR(100) NOT NULL
+);
+INSERT INTO categories (id, name) VALUES
+('A', 'Technical Skills'),
+('B', 'Sports & Cultural'),
+('C', 'Community Outreach & Social Initiatives'),
+('D', 'Innovation / IPR / Entrepreneurship'),
+('E', 'Leadership / Management');
+
+🔹 Step 2: Activities Table
+Each category has multiple sub-activities.
+We’ll store activity type, required proof, and whether points are fixed or level-based.
+CREATE TABLE activities_master (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id CHAR(1),
+    activity_name VARCHAR(150),
+    document_evidence VARCHAR(150),
+    points_type ENUM('Fixed','Level'), -- whether fixed points or depends on level
+    min_points INT DEFAULT NULL,       -- for fixed or minimum
+    max_points INT DEFAULT NULL,       -- for fixed or maximum
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+🔹 Step 3: Activity Levels Table
+Some activities (Categories A, B, E) have different points based on level (College → International, Dept → University).
+CREATE TABLE activity_levels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    activity_id INT,
+    level VARCHAR(50),    -- College, District, State, National, International, Dept, University
+    points INT,
+    FOREIGN KEY (activity_id) REFERENCES activities_master(id) ON DELETE CASCADE
+);
+
+🔹 Step 4: Insert Data
+🅰️ Category A – Technical Skills (Level-based & Fixed)
+-- Level-basedINSERT INTO activities_master (category_id, activity_name, document_evidence, points_type) VALUES
+('A', 'Paper Presentation', 'Certificate', 'Level'),
+('A', 'Project Competition', 'Certificate', 'Level'),
+('A', 'Hackathons / Ideathons', 'Certificate', 'Level'),
+('A', 'Poster Competitions', 'Certificate', 'Level'),
+('A', 'Competitive Programming', 'Certificate', 'Level'),
+('A', 'Workshop', 'Certificate', 'Level'),
+('A', 'Industrial Training / Case Studies', 'Certificate', 'Level');
+-- FixedINSERT INTO activities_master (category_id, activity_name, document_evidence, points_type, min_points, max_points) VALUES
+('A', 'MOOC with Final Assessment', 'Certificate', 'Fixed', 5, 5),
+('A', 'Internship / Professional Certification', 'Certificate', 'Fixed', 5, 5),
+('A', 'Industrial / Exhibition Visit', 'Report', 'Fixed', 5, 5),
+('A', 'Language Proficiency (EF SET + Foreign Language)', 'Certificate', 'Fixed', 5, 10);
+Then insert levels for level-based activities (College → International):
+INSERT INTO activity_levels (activity_id, level, points)SELECT id, 'College', 3 FROM activities_master WHERE activity_name='Paper Presentation';
+INSERT INTO activity_levels (activity_id, level, points)SELECT id, 'District', 6 FROM activities_master WHERE activity_name='Paper Presentation';INSERT INTO activity_levels (activity_id, level, points)SELECT id, 'State', 9 FROM activities_master WHERE activity_name='Paper Presentation';INSERT INTO activity_levels (activity_id, level, points)SELECT id, 'National', 12 FROM activities_master WHERE activity_name='Paper Presentation';INSERT INTO activity_levels (activity_id, level, points)SELECT id, 'International', 15 FROM activities_master WHERE activity_name='Paper Presentation';
+(Repeat similarly for Project Competition, Hackathon, Workshop, etc.)
+
+🅱️ Category B – Sports & Cultural
+INSERT INTO activities_master (category_id, activity_name, document_evidence, points_type)VALUES 
+('B', 'Sports Participation', 'Certificate', 'Level'),
+('B', 'Cultural Participation', 'Certificate', 'Level');
+Then insert their level points (College–International).
+
+🅲 Category C – Community Outreach (Fixed)
+INSERT INTO activities_master (category_id, activity_name, document_evidence, points_type, min_points, max_points)VALUES
+('C', 'Community Service (Two Day)', 'Certificate/Letter', 'Fixed', 3, 3),
+('C', 'Community Service (Up to One Week)', 'Certificate/Letter', 'Fixed', 6, 6),
+('C', 'Community Service (One Month)', 'Certificate/Letter', 'Fixed', 9, 9),
+('C', 'Community Service (One Semester/Year)', 'Certificate/Letter', 'Fixed', 12, 12);
+
+🅳 Category D – Innovation / IPR / Entrepreneurship (Fixed)
+INSERT INTO activities_master (category_id, activity_name, document_evidence, points_type, min_points, max_points)VALUES
+('D', 'Entrepreneurship / IPR Workshop', 'Certificate', 'Fixed', 5, 5),
+('D', 'MSME Programme', 'Certificate', 'Fixed', 5, 5),
+('D', 'Awards/Recognitions for Products', 'Certificate', 'Fixed', 10, 10),
+('D', 'Completed Prototype Development', 'Report', 'Fixed', 15, 15),
+('D', 'Filed a Patent', 'Certificate', 'Fixed', 5, 5),
+('D', 'Published Patent', 'Certificate', 'Fixed', 10, 10),
+('D', 'Patent Granted', 'Certificate', 'Fixed', 15, 15),
+('D', 'Registered Start-up Company', 'Legal Proof', 'Fixed', 10, 10),
+('D', 'Revenue/Profits Generated', 'Proof', 'Fixed', 15, 15),
+('D', 'Attracted Investor Funding', 'Proof', 'Fixed', 15, 15),
+('D', 'International Conference / Journal (Scopus/UGC)', 'Certificate', 'Fixed', 10, 10),
+('D', 'Innovation Implemented by Industry/User', 'Proof', 'Fixed', 15, 15),
+('D', 'Social Innovation / Grassroot Value Addition', 'Proof', 'Fixed', 10, 10),
+('D', 'Business Hackathon', 'Certificate', 'Fixed', 10, 10),
+('D', 'Social Enterprise Pilot', 'Certificate', 'Fixed', 10, 10),
+('D', 'High Customer Review for Product', 'Certificate', 'Fixed', 10, 10),
+('D', 'Developed Social Innovation with Impact', 'Proof', 'Fixed', 10, 10);
+
+🅴 Category E – Leadership / Management (Level + Fixed)
+-- Level-basedINSERT INTO activities_master (category_id, activity_name, document_evidence, points_type)VALUES
+('E', 'Club/Association Participation (Member/Volunteer)', 'Certificate', 'Level'),
+('E', 'Club/Association Coordinator', 'Certificate', 'Level');
+-- FixedINSERT INTO activities_master (category_id, activity_name, document_evidence, points_type, min_points, max_points)VALUES
+('E', 'Professional Society Membership (IEEE, CSI, etc.)', 'Certificate', 'Fixed', 5, 5),
+('E', 'Special Initiatives for University', 'Proof', 'Fixed', 5, 5);
